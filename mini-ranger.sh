@@ -1,7 +1,10 @@
 #!/bin/bash
+#
+# TODO: for more logos https://fontawesome.com/search
 
 current_dir=$(pwd)
 current_selection=0
+sub_selection=0
 
 # Path to the image you want to display (use absolute path)
 image_path="/home/harshitpdhanwalkar/Pictures/wallpapers/Law1.jpg"
@@ -26,18 +29,18 @@ display_image() {
 COLOR_RESET='\e[0m'
 COLOR_DIR='\e[1;34m'
 COLOR_EXE='\e[1;32m'
-COLOR_HIGHLIGHT='\e[1;37m\e[41m'  # White text on red background
+COLOR_HIGHLIGHT='\e[30m\e[47m'  # White background with black text
 
 # Icon mapping based on file extensions
 declare -A FILE_ICONS
 FILE_ICONS=(
   ["sh"]="🐚"      # Shell script
-  ["py"]="🐍"      # Python
+  ["py"]=""       # Python
   ["cpp"]="🌐"     # C++
   ["c"]="🌐"       # C
   ["h"]="🌐"       # C/C++ Header
   ["java"]="☕"    # Java
-  ["js"]="📜"      # JavaScript
+  ["js"]=""      # JavaScript
   ["html"]="🌐"    # HTML
   ["css"]="🎨"     # CSS
   ["md"]="📝"      # Markdown
@@ -57,12 +60,17 @@ FILE_ICONS=(
   ["doc"]="📃"     # Word document
   ["docx"]="📃"    # Word document
   ["json"]="🔧"    # JSON file
-  ["xml"]="🔧"     # XML file
+  ["xml"]=""   # XML file
 )
 
 # Function to list files and directories
 list_files() {
   ls -1 --group-directories-first "$current_dir"
+}
+
+list_sub_files() {
+  local dir="$1"
+  ls -1 --group-directories-first "$dir"
 }
 
 # Function to display files with appropriate colors and icons
@@ -71,7 +79,9 @@ display_files_with_colors() {
   local extension="${file##*.}"
   local icon="${FILE_ICONS[$extension]}"
   
-  if [ -d "$current_dir/$file" ]; then
+  if [ $current_selection -eq $2 ]; then
+    echo -e "${COLOR_SELECTED_BG}${COLOR_SELECTED_TEXT}$file${COLOR_RESET}"
+  elif [ -d "$current_dir/$file" ]; then
     echo -e "${COLOR_DIR}$file${COLOR_RESET}"
   elif [ -x "$current_dir/$file" ]; then
     echo -e "${COLOR_EXE}$file${COLOR_RESET}"
@@ -89,24 +99,45 @@ display() {
   clear
   display_image
   echo "Current directory: $current_dir"
-  echo "----------------------------"
+  echo "---------------------------------------------------------------"
   files=($(list_files))
-  for i in "${!files[@]}"; do
+  sub_dir=""
+  sub_files=()
+
+  if [ -d "$current_dir/${files[$current_selection]}" ]; then
+    sub_dir="$current_dir/${files[$current_selection]}"
+    sub_files=($(list_sub_files "$sub_dir"))
+  fi
+
+  # Table header
+  printf "| %-35s | %-35s |\n" "Main Directory" "Subdirectories"
+  echo "---------------------------------------------------------------"
+
+  max_files=${#files[@]}
+  max_sub_files=${#sub_files[@]}
+  max_lines=$(( max_files > max_sub_files ? max_files : max_sub_files ))
+
+  for (( i=0; i<$max_lines; i++ )); do
+    # Display main directory files
     if [ $i -eq $current_selection ]; then
-      echo -e "${COLOR_HIGHLIGHT}${files[$i]}${COLOR_RESET}"
-      if [ -d "$current_dir/${files[$i]}" ]; then
-        echo "Subdirectory contents:"
-        subfiles=($(ls -1 --group-directories-first "$current_dir/${files[$i]}"))
-        for subfile in "${subfiles[@]}"; do
-          echo -n "  "
-          display_files_with_colors "$subfile"
-        done
+      printf "| ${COLOR_HIGHLIGHT}%-35s${COLOR_RESET} |" "${files[$i]:- }"
+    else
+      printf "| %-35s |" "$(display_files_with_colors "${files[$i]:- }" $i)"
+    fi
+
+    # Display subdirectory files
+    if [ $i -lt ${#sub_files[@]} ]; then
+      if [ $i -eq $sub_selection ]; then
+        printf " ${COLOR_HIGHLIGHT}%-35s${COLOR_RESET} |\n" "${sub_files[$i]:- }"
+      else
+        printf " %-35s |\n" "$(display_files_with_colors "${sub_files[$i]:- }" $i)"
       fi
     else
-      display_files_with_colors "${files[$i]}"
+      printf " %-35s |\n" ""
     fi
+    echo "---------------------------------------------------------------"
   done
-  echo "----------------------------"
+
   echo "Use 'h' to go up, 'j' and 'k' to navigate, 'l' to enter, 'o' to open with nvim, 'q' to quit"
 }
 
@@ -117,23 +148,30 @@ navigate() {
     read -n1 -s key
     case $key in
       q) break ;;
-      h) current_dir=$(dirname "$current_dir") ;;
+      h)
+        current_dir=$(dirname "$current_dir")
+        current_selection=0
+        sub_selection=0
+        ;;
       j)
         current_selection=$((current_selection + 1))
         if [ $current_selection -ge ${#files[@]} ]; then
           current_selection=0
         fi
+        sub_selection=0
         ;;
       k)
         current_selection=$((current_selection - 1))
         if [ $current_selection -lt 0 ]; then
           current_selection=$((${#files[@]} - 1))
         fi
+        sub_selection=0
         ;;
       l)
         if [ -d "$current_dir/${files[$current_selection]}" ]; then
           current_dir="$current_dir/${files[$current_selection]}"
           current_selection=0
+          sub_selection=0
         else
           echo "Not a directory"
           sleep 1

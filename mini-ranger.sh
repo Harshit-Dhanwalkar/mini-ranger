@@ -7,7 +7,7 @@ current_selection=0
 sub_selection=0
 
 # Path to the image you want to display (use absolute path)
-image_path="/home/harshitpdhanwalkar/Pictures/wallpapers/Law1.jpg"
+image_path="~/Pictures/wallpapers/Law1.jpg"
 
 # Function to display the image in the top-right corner
 display_image() {

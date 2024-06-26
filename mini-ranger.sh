@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # TODO: for more logos https://fontawesome.com/search
+# TODO: Color scripts
 
 current_dir=$(pwd)
 current_selection=0
@@ -30,6 +31,38 @@ COLOR_RESET='\e[0m'
 COLOR_DIR='\e[1;34m'
 COLOR_EXE='\e[1;32m'
 COLOR_HIGHLIGHT='\e[30m\e[47m'  # White background with black text
+
+# File extension color codes
+declare -A FILE_COLORS
+FILE_COLORS=(
+  ["sh"]='\e[0;33m'    # Shell script - Yellow
+  ["py"]='\e[0;35m'    # Python - Magenta
+  ["cpp"]='\e[0;36m'   # C++ - Cyan
+  ["c"]='\e[0;36m'     # C - Cyan
+  ["h"]='\e[0;36m'     # C/C++ Header - Cyan
+  ["java"]='\e[0;31m'  # Java - Red
+  ["js"]='\e[0;33m'    # JavaScript - Yellow
+  ["html"]='\e[0;35m'  # HTML - Magenta
+  ["css"]='\e[0;32m'   # CSS - Green
+  ["md"]='\e[0;34m'    # Markdown - Blue
+  ["txt"]='\e[0;37m'   # Text file - Light Gray
+  ["pdf"]='\e[0;31m'   # PDF - Red
+  ["jpg"]='\e[0;33m'   # JPEG image - Yellow
+  ["jpeg"]='\e[0;33m'  # JPEG image - Yellow
+  ["png"]='\e[0;33m'   # PNG image - Yellow
+  ["gif"]='\e[0;33m'   # GIF image - Yellow
+  ["zip"]='\e[0;31m'   # ZIP archive - Red
+  ["tar"]='\e[0;31m'   # TAR archive - Red
+  ["gz"]='\e[0;31m'    # GZ archive - Red
+  ["mp3"]='\e[0;35m'   # MP3 audio - Magenta
+  ["wav"]='\e[0;35m'   # WAV audio - Magenta
+  ["mp4"]='\e[0;35m'   # MP4 video - Magenta
+  ["mkv"]='\e[0;35m'   # MKV video - Magenta
+  ["doc"]='\e[0;34m'   # Word document - Blue
+  ["docx"]='\e[0;34m'  # Word document - Blue
+  ["json"]='\e[0;36m'  # JSON file - Cyan
+  ["xml"]='\e[0;36m'   # XML file - Cyan
+)
 
 # Icon mapping based on file extensions
 declare -A FILE_ICONS
@@ -78,18 +111,19 @@ display_files_with_colors() {
   local file="$1"
   local extension="${file##*.}"
   local icon="${FILE_ICONS[$extension]}"
+  local color="${FILE_COLORS[$extension]}"
   
   if [ $current_selection -eq $2 ]; then
-    echo -e "${COLOR_SELECTED_BG}${COLOR_SELECTED_TEXT}$file${COLOR_RESET}"
+    echo -e "${COLOR_HIGHLIGHT}$file${COLOR_RESET}"
   elif [ -d "$current_dir/$file" ]; then
     echo -e "${COLOR_DIR}$file${COLOR_RESET}"
   elif [ -x "$current_dir/$file" ]; then
     echo -e "${COLOR_EXE}$file${COLOR_RESET}"
   else
     if [ -n "$icon" ]; then
-      echo -e "$icon $file"
+      echo -e "$icon ${color}${file}${COLOR_RESET}"
     else
-      echo "$file"
+      echo -e "${color}$file${COLOR_RESET}"
     fi
   fi
 }

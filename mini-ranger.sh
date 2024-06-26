@@ -1,14 +1,13 @@
 #!/bin/bash
 #
 # TODO: for more logos https://fontawesome.com/search
-# TODO: Color scripts
 
 current_dir=$(pwd)
 current_selection=0
 sub_selection=0
 
-# Path to the image you want to display (use absolute path)
-image_path="/home/harshitpdhanwalkar/Pictures/wallpapers/Law1.jpg"
+# Path to the image you want to display
+image_path="../../Pictures/wallpapers/Law1.jpg"
 
 # Function to display the image in the top-right corner
 display_image() {
@@ -30,8 +29,8 @@ display_image() {
 COLOR_RESET='\e[0m'
 COLOR_DIR='\e[1;34m'
 COLOR_EXE='\e[1;32m'
-COLOR_HIGHLIGHT='\e[30m\e[47m'  # White background with black text
-COLOR_DEFAULT='\e[0;37m'  # Light Gray for files without extensions
+COLOR_HIGHLIGHT='\e[30m\e[47m'
+COLOR_DEFAULT='\e[0;37m'
 
 # File extension color codes
 declare -A FILE_COLORS
@@ -74,16 +73,16 @@ FILE_ICONS=(
   ["c"]="🌐"       # C
   ["h"]="🌐"       # C/C++ Header
   ["java"]="☕"    # Java
-  ["js"]=""      # JavaScript
+  ["js"]=""       # JavaScript
   ["html"]="🌐"    # HTML
   ["css"]="🎨"     # CSS
   ["md"]="📝"      # Markdown
   ["txt"]="📄"     # Text file
   ["pdf"]="📚"     # PDF
-  ["jpg"]="🖼️"    # JPEG image
-  ["jpeg"]="🖼️"   # JPEG image
-  ["png"]="🖼️"    # PNG image
-  ["gif"]="🖼️"    # GIF image
+  ["jpg"]="🖼️"     # JPEG image
+  ["jpeg"]="🖼️"    # JPEG image
+  ["png"]="🖼️"     # PNG image
+  ["gif"]="🖼️"     # GIF image
   ["zip"]="📦"     # ZIP archive
   ["tar"]="📦"     # TAR archive
   ["gz"]="📦"      # GZ archive
@@ -94,7 +93,7 @@ FILE_ICONS=(
   ["doc"]="📃"     # Word document
   ["docx"]="📃"    # Word document
   ["json"]="🔧"    # JSON file
-  ["xml"]=""   # XML file
+  ["xml"]=""      # XML file
 )
 
 # Function to list files and directories
@@ -145,7 +144,7 @@ display() {
   fi
 
   # Table header
-  printf "┃ %-35s ┃ %-35s ┃\n" "Main Directory" "Subdirectories"
+  printf "┃ \e[1;36m%-35s\e[0m ┃ \e[1;36m%-35s\e[0m ┃\n" "Main Directory" "Subdirectories"
   echo "---------------------------------------------------------------"
 
   max_files=${#files[@]}

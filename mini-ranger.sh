@@ -5,6 +5,7 @@
 current_dir=$(pwd)
 current_selection=0
 sub_selection=0
+search_term=""
 
 # Path to the image you want to display
 image_path="../../Pictures/wallpapers/Law1.jpg"
@@ -29,7 +30,7 @@ display_image() {
 COLOR_RESET='\e[0m'
 COLOR_DIR='\e[1;34m'
 COLOR_EXE='\e[1;32m'
-COLOR_HIGHLIGHT='\e[30m\e[47m'
+COLOR_HIGHLIGHT='\e[36m\e[47m'  # Light Cyan background with Black text
 COLOR_DEFAULT='\e[0;37m'
 
 # File extension color codes
@@ -60,6 +61,7 @@ FILE_COLORS=(
   ["mkv"]='\e[0;35m'   # MKV video - Magenta
   ["doc"]='\e[0;34m'   # Word document - Blue
   ["docx"]='\e[0;34m'  # Word document - Blue
+  ["ppt"]='\e[0;34m'   # presentation - Blue
   ["json"]='\e[0;36m'  # JSON file - Cyan
   ["xml"]='\e[0;36m'   # XML file - Cyan
 )
@@ -92,18 +94,27 @@ FILE_ICONS=(
   ["mkv"]="🎥"     # MKV video
   ["doc"]="📃"     # Word document
   ["docx"]="📃"    # Word document
+  ["ppt"]="📃"     # presentation
   ["json"]="🔧"    # JSON file
   ["xml"]=""      # XML file
 )
 
 # Function to list files and directories
 list_files() {
-  ls -1 --group-directories-first "$current_dir"
+  if [ -z "$search_term" ]; then
+    ls -1 --group-directories-first "$current_dir"
+  else
+    find "$current_dir" -maxdepth 1 -iname "*$search_term*" -printf "%f\n"
+  fi
 }
 
 list_sub_files() {
   local dir="$1"
-  ls -1 --group-directories-first "$dir"
+  if [ -z "$search_term" ]; then
+    ls -1 --group-directories-first "$dir"
+  else
+    find "$dir" -maxdepth 1 -iname "*$search_term*" -printf "%f\n"
+  fi
 }
 
 # Function to display files with appropriate colors and icons
@@ -133,7 +144,7 @@ display() {
   clear
   display_image
   echo "Current directory: $current_dir"
-  echo "---------------------------------------------------------------"
+  echo "-----------------------------------------------------------------------------"
   files=($(list_files))
   sub_dir=""
   sub_files=()
@@ -145,7 +156,7 @@ display() {
 
   # Table header
   printf "┃ \e[1;36m%-35s\e[0m ┃ \e[1;36m%-35s\e[0m ┃\n" "Main Directory" "Subdirectories"
-  echo "---------------------------------------------------------------"
+  echo "----------------------------------------------------------------------------"
 
   max_files=${#files[@]}
   max_sub_files=${#sub_files[@]}
@@ -163,13 +174,22 @@ display() {
     fi
   done
 
-  echo "Use 'h' or left arrow to go up, 'j' or down arrow to navigate, 'k' or up arrow to navigate, 'l' or right arrow to enter, 'o' to open with default application, 'q' to quit"
+  #echo "Use 'h' or left arrow to go up, 'j' or down arrow to navigate, 'k' or up arrow to navigate, 'l' or right arrow to enter, 'o' to open with default application, 'q' to quit"
+  echo "----------------------------------------------------------------------------"
 }
 
 # Function to display preview of text files using bat
 display_preview() {
   local file="$1"
   bat --style=numbers --color=always "$file"
+}
+
+# Function to rename selected file
+rename_file() {
+  local selected_file="${files[$current_selection]}"
+  echo -n "Enter new name for $selected_file: "
+  read new_name
+  mv "$current_dir/$selected_file" "$current_dir/$new_name"
 }
 
 # Function to navigate directories
@@ -211,7 +231,7 @@ navigate() {
           sleep 1
         fi
         ;;
-     o)
+      o)
         local selected_file="${files[$current_selection]}"
         local file_extension="${selected_file##*.}"
 
@@ -229,12 +249,12 @@ navigate() {
           sleep 1
         fi
         ;;
-     p)  # Preview file contents
+      p)  # Preview file contents
         local selected_file="${files[$current_selection]}"
         local file_extension="${selected_file##*.}"
         if [ -f "$current_dir/$selected_file" ]; then
           case "$file_extension" in
-            sh|py|txt|*)  # Add more file types as needed
+            sh|py|txt|js|md|css|html|json|zsh|bash)  # Add more file types as needed
               clear
               display_image
               echo "Previewing: $selected_file"
@@ -252,8 +272,21 @@ navigate() {
           sleep 1
         fi
         ;;
+      r)  # Rename file
+        if [ -f "$current_dir/${files[$current_selection]}" ]; then
+          rename_file
+        else
+          echo "Not a file"
+          sleep 1
+        fi
+        ;;
+      s)  # Search files
+        echo -n "Enter search term: "
+        read search_term
+        current_selection=0  # Reset selection after search
+        ;;
     esac
-    done
+  done
 }
 
 navigate

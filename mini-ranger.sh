@@ -31,6 +31,7 @@ COLOR_RESET='\e[0m'
 COLOR_DIR='\e[1;34m'
 COLOR_EXE='\e[1;32m'
 COLOR_HIGHLIGHT='\e[30m\e[47m'  # White background with black text
+COLOR_DEFAULT='\e[0;37m'  # Light Gray for files without extensions
 
 # File extension color codes
 declare -A FILE_COLORS
@@ -123,7 +124,7 @@ display_files_with_colors() {
     if [ -n "$icon" ]; then
       echo -e "$icon ${color}${file}${COLOR_RESET}"
     else
-      echo -e "${color}$file${COLOR_RESET}"
+      echo -e "${COLOR_DEFAULT}$file${COLOR_RESET}"
     fi
   fi
 }
@@ -172,7 +173,7 @@ display() {
     echo "---------------------------------------------------------------"
   done
 
-  echo "Use 'h' to go up, 'j' and 'k' to navigate, 'l' to enter, 'o' to open with nvim, 'q' to quit"
+  echo "Use 'h' to go up, 'j' and 'k' to navigate, 'l' to enter, 'o' to open with default application, 'q' to quit"
 }
 
 # Function to navigate directories
@@ -213,7 +214,7 @@ navigate() {
         ;;
       o)
         if [ -f "$current_dir/${files[$current_selection]}" ]; then
-          nvim "$current_dir/${files[$current_selection]}"
+          xdg-open "$current_dir/${files[$current_selection]}"
         else
           echo "Not a file"
           sleep 1

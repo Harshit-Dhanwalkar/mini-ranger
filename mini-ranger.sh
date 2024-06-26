@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# TODO: for more logos https://fontawesome.com/search
+# NOTE: for more logos https://fontawesome.com/search
 
 current_dir=$(pwd)
 current_selection=0
@@ -166,6 +166,12 @@ display() {
   echo "Use 'h' or left arrow to go up, 'j' or down arrow to navigate, 'k' or up arrow to navigate, 'l' or right arrow to enter, 'o' to open with default application, 'q' to quit"
 }
 
+# Function to display preview of text files using bat
+display_preview() {
+  local file="$1"
+  bat --style=numbers --color=always "$file"
+}
+
 # Function to navigate directories
 navigate() {
   while true; do
@@ -205,16 +211,49 @@ navigate() {
           sleep 1
         fi
         ;;
-      o)
-        if [ -f "$current_dir/${files[$current_selection]}" ]; then
-          xdg-open "$current_dir/${files[$current_selection]}"
+     o)
+        local selected_file="${files[$current_selection]}"
+        local file_extension="${selected_file##*.}"
+
+        if [ -f "$current_dir/$selected_file" ]; then
+          case "$file_extension" in
+            sh|py|c|txt|md|css|js|html|json)
+              nvim "$current_dir/$selected_file"
+              ;;
+            *)
+              xdg-open "$current_dir/$selected_file"
+              ;;
+          esac
+        else
+          echo "Not a file"
+          sleep 1
+        fi
+        ;;
+     p)  # Preview file contents
+        local selected_file="${files[$current_selection]}"
+        local file_extension="${selected_file##*.}"
+        if [ -f "$current_dir/$selected_file" ]; then
+          case "$file_extension" in
+            sh|py|txt|*)  # Add more file types as needed
+              clear
+              display_image
+              echo "Previewing: $selected_file"
+              echo "---------------------------------------------------------------"
+              display_preview "$current_dir/$selected_file"
+              read -n 1 -s -r -p "Press any key to continue"
+              ;;
+            *)
+              echo "Preview not supported for this file type."
+              sleep 1
+              ;;
+          esac
         else
           echo "Not a file"
           sleep 1
         fi
         ;;
     esac
-  done
+    done
 }
 
 navigate

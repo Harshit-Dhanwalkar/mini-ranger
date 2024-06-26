@@ -8,7 +8,7 @@ current_selection=0
 sub_selection=0
 
 # Path to the image you want to display (use absolute path)
-image_path="~/Pictures/wallpapers/Law1.jpg"
+image_path="/home/harshitpdhanwalkar/Pictures/wallpapers/Law1.jpg"
 
 # Function to display the image in the top-right corner
 display_image() {
@@ -115,16 +115,16 @@ display_files_with_colors() {
   local color="${FILE_COLORS[$extension]}"
   
   if [ $current_selection -eq $2 ]; then
-    echo -e "${COLOR_HIGHLIGHT}$file${COLOR_RESET}"
+    echo -e "${COLOR_HIGHLIGHT}${file}${COLOR_RESET}"
   elif [ -d "$current_dir/$file" ]; then
-    echo -e "${COLOR_DIR}$file${COLOR_RESET}"
+    echo -e "${COLOR_DIR}${file}${COLOR_RESET}"
   elif [ -x "$current_dir/$file" ]; then
-    echo -e "${COLOR_EXE}$file${COLOR_RESET}"
+    echo -e "${COLOR_EXE}${file}${COLOR_RESET}"
   else
     if [ -n "$icon" ]; then
       echo -e "$icon ${color}${file}${COLOR_RESET}"
     else
-      echo -e "${COLOR_DEFAULT}$file${COLOR_RESET}"
+      echo -e "${COLOR_DEFAULT}${file}${COLOR_RESET}"
     fi
   fi
 }
@@ -145,7 +145,7 @@ display() {
   fi
 
   # Table header
-  printf "| %-35s | %-35s |\n" "Main Directory" "Subdirectories"
+  printf "┃ %-35s ┃ %-35s ┃\n" "Main Directory" "Subdirectories"
   echo "---------------------------------------------------------------"
 
   max_files=${#files[@]}
@@ -154,55 +154,49 @@ display() {
 
   for (( i=0; i<$max_lines; i++ )); do
     # Display main directory files
-    if [ $i -eq $current_selection ]; then
-      printf "| ${COLOR_HIGHLIGHT}%-35s${COLOR_RESET} |" "${files[$i]:- }"
-    else
-      printf "| %-35s |" "$(display_files_with_colors "${files[$i]:- }" $i)"
-    fi
+    printf "┃ %-35s ┃" "$(display_files_with_colors "${files[$i]:- }" $i)"
 
     # Display subdirectory files
     if [ $i -lt ${#sub_files[@]} ]; then
-      if [ $i -eq $sub_selection ]; then
-        printf " ${COLOR_HIGHLIGHT}%-35s${COLOR_RESET} |\n" "${sub_files[$i]:- }"
-      else
-        printf " %-35s |\n" "$(display_files_with_colors "${sub_files[$i]:- }" $i)"
-      fi
+      printf " %-35s ┃\n" "$(display_files_with_colors "${sub_files[$i]:- }" $i)"
     else
-      printf " %-35s |\n" ""
+      printf " %-35s ┃\n" ""
     fi
-    echo "---------------------------------------------------------------"
   done
 
-  echo "Use 'h' to go up, 'j' and 'k' to navigate, 'l' to enter, 'o' to open with default application, 'q' to quit"
+  echo "Use 'h' or left arrow to go up, 'j' or down arrow to navigate, 'k' or up arrow to navigate, 'l' or right arrow to enter, 'o' to open with default application, 'q' to quit"
 }
 
 # Function to navigate directories
 navigate() {
   while true; do
     display
-    read -n1 -s key
+    read -rsn1 key
+    if [[ $key == $'\e' ]]; then
+      read -rsn2 key
+    fi
     case $key in
       q) break ;;
-      h)
+      h|'[D')
         current_dir=$(dirname "$current_dir")
         current_selection=0
         sub_selection=0
         ;;
-      j)
+      j|'[B')
         current_selection=$((current_selection + 1))
         if [ $current_selection -ge ${#files[@]} ]; then
           current_selection=0
         fi
         sub_selection=0
         ;;
-      k)
+      k|'[A')
         current_selection=$((current_selection - 1))
         if [ $current_selection -lt 0 ]; then
           current_selection=$((${#files[@]} - 1))
         fi
         sub_selection=0
         ;;
-      l)
+      l|'[C')
         if [ -d "$current_dir/${files[$current_selection]}" ]; then
           current_dir="$current_dir/${files[$current_selection]}"
           current_selection=0

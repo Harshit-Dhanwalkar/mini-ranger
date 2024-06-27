@@ -1,6 +1,12 @@
 #!/bin/bash
 #
 # NOTE: for more logos https://fontawesome.com/search
+# TODO: search files modification
+# TODO: Bookmark directories or files
+# TODO: preview functionality for text files (\*.txt, \*.sh) using tools like head, tail, or bat to show a snippet of the file content
+# TODO: Display files size
+# TODO: Mouse support
+# TODO: Caching: Implement caching mechanisms to speed up directory listing and navigation, especially for directories with a large number of files. 
 
 current_dir=$(pwd)
 current_selection=0
@@ -28,42 +34,42 @@ display_image() {
 
 # Color codes
 COLOR_RESET='\e[0m'
-COLOR_DIR='\e[1;34m'
-COLOR_EXE='\e[1;32m'
-COLOR_HIGHLIGHT='\e[36m\e[47m'  # Light Cyan background with Black text
-COLOR_DEFAULT='\e[0;37m'
+COLOR_DIR='\e[1;34m'      # Blue
+COLOR_EXE='\e[1;32m'      # Green
+COLOR_HIGHLIGHT='\e[1;31m\e[47m'  # Bold Red text on White background
+COLOR_DEFAULT='\e[0;37m'  # Light gray
 
 # File extension color codes
 declare -A FILE_COLORS
 FILE_COLORS=(
-  ["sh"]='\e[0;33m'    # Shell script - Yellow
-  ["py"]='\e[0;35m'    # Python - Magenta
-  ["cpp"]='\e[0;36m'   # C++ - Cyan
-  ["c"]='\e[0;36m'     # C - Cyan
-  ["h"]='\e[0;36m'     # C/C++ Header - Cyan
-  ["java"]='\e[0;31m'  # Java - Red
-  ["js"]='\e[0;33m'    # JavaScript - Yellow
-  ["html"]='\e[0;35m'  # HTML - Magenta
-  ["css"]='\e[0;32m'   # CSS - Green
-  ["md"]='\e[0;34m'    # Markdown - Blue
-  ["txt"]='\e[0;37m'   # Text file - Light Gray
-  ["pdf"]='\e[0;31m'   # PDF - Red
-  ["jpg"]='\e[0;33m'   # JPEG image - Yellow
-  ["jpeg"]='\e[0;33m'  # JPEG image - Yellow
-  ["png"]='\e[0;33m'   # PNG image - Yellow
-  ["gif"]='\e[0;33m'   # GIF image - Yellow
-  ["zip"]='\e[0;31m'   # ZIP archive - Red
-  ["tar"]='\e[0;31m'   # TAR archive - Red
-  ["gz"]='\e[0;31m'    # GZ archive - Red
-  ["mp3"]='\e[0;35m'   # MP3 audio - Magenta
-  ["wav"]='\e[0;35m'   # WAV audio - Magenta
-  ["mp4"]='\e[0;35m'   # MP4 video - Magenta
-  ["mkv"]='\e[0;35m'   # MKV video - Magenta
-  ["doc"]='\e[0;34m'   # Word document - Blue
-  ["docx"]='\e[0;34m'  # Word document - Blue
-  ["ppt"]='\e[0;34m'   # presentation - Blue
-  ["json"]='\e[0;36m'  # JSON file - Cyan
-  ["xml"]='\e[0;36m'   # XML file - Cyan
+  ["sh"]="${COLOR_YELLOW}"      # Shell script - Yellow
+  ["py"]="${COLOR_MAGENTA}"     # Python - Magenta
+  ["cpp"]="${COLOR_CYAN}"       # C++ - Cyan
+  ["c"]="${COLOR_CYAN}"         # C - Cyan
+  ["h"]="${COLOR_CYAN}"         # C/C++ Header - Cyan
+  ["java"]="${COLOR_MAGENTA}"   # Java - Magenta
+  ["js"]="${COLOR_YELLOW}"      # JavaScript - Yellow
+  ["html"]="${COLOR_MAGENTA}"   # HTML - Magenta
+  ["css"]="${COLOR_CYAN}"       # CSS - Cyan
+  ["md"]="${COLOR_CYAN}"        # Markdown - Cyan
+  ["txt"]="${COLOR_CYAN}"       # Text file - Cyan
+  ["pdf"]="${COLOR_MAGENTA}"    # PDF - Magenta
+  ["jpg"]="${COLOR_YELLOW}"     # JPEG image - Yellow
+  ["jpeg"]="${COLOR_YELLOW}"    # JPEG image - Yellow
+  ["png"]="${COLOR_YELLOW}"     # PNG image - Yellow
+  ["gif"]="${COLOR_YELLOW}"     # GIF image - Yellow
+  ["zip"]="${COLOR_MAGENTA}"    # ZIP archive - Magenta
+  ["tar"]="${COLOR_MAGENTA}"    # TAR archive - Magenta
+  ["gz"]="${COLOR_MAGENTA}"     # GZ archive - Magenta
+  ["mp3"]="${COLOR_CYAN}"       # MP3 audio - Cyan
+  ["wav"]="${COLOR_CYAN}"       # WAV audio - Cyan
+  ["mp4"]="${COLOR_CYAN}"       # MP4 video - Cyan
+  ["mkv"]="${COLOR_CYAN}"       # MKV video - Cyan
+  ["doc"]="${COLOR_CYAN}"       # Word document - Cyan
+  ["docx"]="${COLOR_CYAN}"      # Word document - Cyan
+  ["ppt"]="${COLOR_CYAN}"       # Presentation - Cyan
+  ["json"]="${COLOR_YELLOW}"    # JSON file - Yellow
+  ["xml"]="${COLOR_YELLOW}"     # XML file - Yellow
 )
 
 # Icon mapping based on file extensions
@@ -94,7 +100,7 @@ FILE_ICONS=(
   ["mkv"]="🎥"     # MKV video
   ["doc"]="📃"     # Word document
   ["docx"]="📃"    # Word document
-  ["ppt"]="📃"     # presentation
+  ["ppt"]="📃"     # Presentation
   ["json"]="🔧"    # JSON file
   ["xml"]=""      # XML file
 )
@@ -108,6 +114,7 @@ list_files() {
   fi
 }
 
+# Function to list sub-files
 list_sub_files() {
   local dir="$1"
   if [ -z "$search_term" ]; then
@@ -120,21 +127,34 @@ list_sub_files() {
 # Function to display files with appropriate colors and icons
 display_files_with_colors() {
   local file="$1"
+  local index="$2"
   local extension="${file##*.}"
   local icon="${FILE_ICONS[$extension]}"
   local color="${FILE_COLORS[$extension]}"
   
-  if [ $current_selection -eq $2 ]; then
-    echo -e "${COLOR_HIGHLIGHT}${file}${COLOR_RESET}"
-  elif [ -d "$current_dir/$file" ]; then
-    echo -e "${COLOR_DIR}${file}${COLOR_RESET}"
-  elif [ -x "$current_dir/$file" ]; then
-    echo -e "${COLOR_EXE}${file}${COLOR_RESET}"
-  else
-    if [ -n "$icon" ]; then
-      echo -e "$icon ${color}${file}${COLOR_RESET}"
+  if [ "$current_selection" -eq "$index" ]; then
+    if [ -d "$current_dir/$file" ]; then
+      echo -e "${COLOR_HIGHLIGHT}${COLOR_DIR}${file}${COLOR_RESET}"
+    elif [ -x "$current_dir/$file" ]; then
+      echo -e "${COLOR_HIGHLIGHT}${COLOR_EXE}${file}${COLOR_RESET}"
     else
-      echo -e "${COLOR_DEFAULT}${file}${COLOR_RESET}"
+      if [ -n "$icon" ]; then
+        echo -e "${COLOR_HIGHLIGHT}$icon ${color}${file}${COLOR_RESET}"
+      else
+        echo -e "${COLOR_HIGHLIGHT}${COLOR_DEFAULT}${file}${COLOR_RESET}"
+      fi
+    fi
+  else
+    if [ -d "$current_dir/$file" ]; then
+      echo -e "${COLOR_DIR}${file}${COLOR_RESET}"
+    elif [ -x "$current_dir/$file" ]; then
+      echo -e "${COLOR_EXE}${file}${COLOR_RESET}"
+    else
+      if [ -n "$icon" ]; then
+        echo -e "$icon ${color}${file}${COLOR_RESET}"
+      else
+        echo -e "${COLOR_DEFAULT}${file}${COLOR_RESET}"
+      fi
     fi
   fi
 }
@@ -164,17 +184,17 @@ display() {
 
   for (( i=0; i<$max_lines; i++ )); do
     # Display main directory files
-    printf "┃ %-35s ┃" "$(display_files_with_colors "${files[$i]:- }" $i)"
+    main_file_display=$(display_files_with_colors "${files[$i]:- }" "$i")
+    printf "┃ %-35s ┃" "$main_file_display"
 
     # Display subdirectory files
-    if [ $i -lt ${#sub_files[@]} ]; then
-      printf " %-35s ┃\n" "$(display_files_with_colors "${sub_files[$i]:- }" $i)"
-    else
-      printf " %-35s ┃\n" ""
+    sub_file_display=""
+    if [ -n "$sub_dir" ] && [ $i -lt ${#sub_files[@]} ]; then
+      sub_file_display=$(display_files_with_colors "${sub_files[$i]:- }" "$i")
     fi
+    printf " %-35s ┃\n" "$sub_file_display"
   done
 
-  #echo "Use 'h' or left arrow to go up, 'j' or down arrow to navigate, 'k' or up arrow to navigate, 'l' or right arrow to enter, 'o' to open with default application, 'q' to quit"
   echo "----------------------------------------------------------------------------"
 }
 
